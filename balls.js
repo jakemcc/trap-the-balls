@@ -9,7 +9,7 @@ function point(x, y) {
 }
 
 function randInt(upper_bound) {
-  return Math.floor(Math.random() * (upper_bound + 1));
+  return Math.floor(Math.random() * upper_bound);
 }
 
 var colors = ["red", "green", "blue", "brown", "pink", "lightgreen", "goldenrod",
@@ -63,11 +63,12 @@ function initGame() {
   document.body.appendChild(canvasElement);
 
   var context = canvasElement.getContext("2d");
-  var num = 10;
+  var num = 1;
   var circles = [];
   for (var i = 0; i < num; i++) {
     circles[i] = circle(randomPoint(), context);
   }
+  
   setInterval(function() {
     context.clearRect(0, 0, max_x, max_y);
 
