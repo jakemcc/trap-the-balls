@@ -26,14 +26,16 @@ function point(x, y) {
   return p;
 }
 
+function randInt(upper_bound) {
+  return Math.floor(Math.random() * (upper_bound + 1));
+}
 var colors = ["red", "green", "blue", "brown", "pink", "lightgreen", "goldenrod"];
 function randomColor() {
-  return colors[Math.floor(Math.random() * (colors.length + 1))];
+  return colors[randInt(colors.length)];
 }
 
 function randomPoint() {
-  return point(Math.floor(Math.random() * max_x),
-               Math.floor(Math.random() * max_y));
+  return point(randInt(max_x), randInt(max_y));
 }
 
 var env;
