@@ -10,8 +10,8 @@ function circle(center, context) {
   function makeCircle() {
     context.arc(center.x, center.y, 50, 0, Math.PI*2, false);
     context.closePath();
-//    var color = randomColor();
-    var color = "blue";
+    var color = randomColor();
+//    var color = "blue";
     context.strokeStyle = color;
     context.fillStyle = color;
   };
@@ -32,7 +32,7 @@ function circle(center, context) {
     }
     center.x += dx;
     center.y += dy;
-    context.clearRect(0, 0, max_x, max_y);
+//    context.clearRect(0, 0, max_x, max_y);
     that.draw();
   };
   
