@@ -2,39 +2,40 @@
 var max_x = 1000;
 var max_y = 300;
 
-function circle(context) {
+function circle(center, context) {
   var that = {};
-  var dx = 10;
-  var dy = 10;
+  var dx = randInt(10);
+  var dy = randInt(10);
 
-  that.makeCircle = function(x, y) {
-    that.x = x;
-    that.y = y;
-    context.arc(x, y, 50, 0, Math.PI*2, false);
+  function makeCircle() {
+    context.arc(center.x, center.y, 50, 0, Math.PI*2, false);
     context.closePath();
-    var color = randomColor();
+//    var color = randomColor();
+    var color = "blue";
     context.strokeStyle = color;
     context.fillStyle = color;
-  }
+  };
 
-  that.draw = function(x, y) {
+  that.draw = function() {
     context.beginPath();
-    that.makeCircle(x, y);
+    makeCircle();
     context.stroke();
     context.fill()
   };
 
   that.move = function() {
-    if (that.x >= max_x || that.x < 0) {
+    if (center.x >= max_x || center.x < 0) {
       dx = -dx;
     }
-    if (that.y >= max_y || that.y < 0) {
+    if (center.y >= max_y || center.y < 0) {
       dy = -dy;
     }
+    center.x += dx;
+    center.y += dy;
     context.clearRect(0, 0, max_x, max_y);
-    that.draw(that.x + dx, that.y + dy);
-
+    that.draw();
   };
+  
   return that;
 }
 
@@ -66,10 +67,10 @@ function initGame() {
 
   document.body.appendChild(canvasElement);
 
-  c = circle(canvasElement.getContext("2d"));
+  c = circle(randomPoint(), canvasElement.getContext("2d"));
   c.draw(0, 0);
   setInterval(function() {
-    c.move(5, 1)
+    c.move();
   }, 16);
 }
 
