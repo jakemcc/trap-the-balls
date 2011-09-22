@@ -12,7 +12,8 @@ function randInt(upper_bound) {
   return Math.floor(Math.random() * (upper_bound + 1));
 }
 
-var colors = ["red", "green", "blue", "brown", "pink", "lightgreen", "goldenrod"];
+var colors = ["red", "green", "blue", "brown", "pink", "lightgreen", "goldenrod",
+              "purple"];
 function randomColor() {
   return colors[randInt(colors.length)];
 }
@@ -23,8 +24,8 @@ function randomPoint() {
 
 function circle(center, context) {
   var that = {};
-  var dx = randInt(10);
-  var dy = randInt(10);
+  var dx = randInt(10) + 1;
+  var dy = randInt(10) + 1;
   var color = randomColor();
   var size =  randInt(50) + 10;
 
