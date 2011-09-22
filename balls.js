@@ -22,16 +22,17 @@ function randomPoint() {
   return point(randInt(max_x), randInt(max_y));
 }
 
-function circle(center, context) {
+function circle(context) {
   var that = {};
+  var center = point(max_x / 2, max_y / 2);
+  var radius =  randInt(50) + 10;
+  var color = randomColor();
   var dx = randInt(10) + 1;
   var dy = randInt(10) + 1;
-  var color = randomColor();
-  var size =  randInt(50) + 10;
 
   that.draw = function() {
     context.beginPath();
-    context.arc(center.x, center.y, size, 0, Math.PI*2, false);
+    context.arc(center.x, center.y, radius, 0, Math.PI*2, false);
     context.strokeStyle = color;
     context.fillStyle = color;
     context.closePath();
@@ -40,10 +41,10 @@ function circle(center, context) {
   };
 
   that.move = function() {
-    if (center.x >= max_x || center.x < 0) {
+    if (center.x >= max_x - radius || center.x < 0 + radius) {
       dx = -dx;
     }
-    if (center.y >= max_y || center.y < 0) {
+    if (center.y >= max_y - radius || center.y < 0 + radius) {
       dy = -dy;
     }
     center.x += dx;
@@ -63,12 +64,12 @@ function initGame() {
   document.body.appendChild(canvasElement);
 
   var context = canvasElement.getContext("2d");
-  var num = 1;
+  var num = 10;
   var circles = [];
   for (var i = 0; i < num; i++) {
-    circles[i] = circle(randomPoint(), context);
+    circles[i] = circle(context);
   }
-  
+
   setInterval(function() {
     context.clearRect(0, 0, max_x, max_y);
 
@@ -78,5 +79,3 @@ function initGame() {
 
   }, 16);
 }
-
-
