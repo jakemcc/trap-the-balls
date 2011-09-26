@@ -31,20 +31,21 @@ function circle(context) {
   var dx = randInt(10) + 1;
   var dy = randInt(10) + 1;
 
-  that.draw = function() {
+  function draw() {
     context.save();
+
     context.beginPath();
     context.arc(center.x, center.y, radius, 0, Math.PI*2, false);
     context.closePath();
     context.strokeStyle = color;
     context.fillStyle = color;
-
     context.stroke();
     context.fill();
+    
     context.restore();
   };
 
-  that.move = function() {
+  function adjust() {
     if (center.x >= max_x - radius || center.x < 0 + radius) {
       dx = -dx;
     }
@@ -53,7 +54,11 @@ function circle(context) {
     }
     center.x += dx;
     center.y += dy;
-    that.draw();
+  }
+  
+  that.move = function() {
+    adjust();
+    draw();
     return that;
   };
 
