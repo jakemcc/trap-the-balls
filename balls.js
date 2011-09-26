@@ -3,7 +3,7 @@ var BAR_GROWTH_SPEED = 6;
 var MAX_X = 600;
 var MAX_Y = 300;
 var NUM_CIRCLES = 4;
-var elements = [];
+var gBars = [];
 var gSpaces = [];
 var gCanvasElement;
 
@@ -200,7 +200,7 @@ function bar(x, y, isVertical, context) {
 
 function border(context) {
   var that = {};
-  that.move = function() {
+  that.draw = function() {
     context.save();
     context.strokeStyle = "gray";
     context.strokeRect(0, 0, MAX_X, MAX_Y);
@@ -218,7 +218,7 @@ function onClick(e) {
   y -= gCanvasElement.offsetTop;
 
   var b = bar(x, y, e.shiftKey, gCanvasElement.getContext("2d"));
-  elements.push(b);
+  gBars.push(b);
 }
 
 function initGame() {
@@ -233,16 +233,24 @@ function initGame() {
   var context = canvasElement.getContext("2d");
   gContext = context;
 
-  elements.push(border(context));
-  
+  var outline = border(context);
+
+  var circles = []
   for (var i = 0; i < NUM_CIRCLES; i++) {
-    elements.push(circle(context));
+    circles.push(circle(context));
   }
 
   setInterval(function() {
     context.clearRect(0, 0, MAX_X, MAX_Y);
-    for (var i = 0; i < elements.length; i++) {
-      elements[i] = elements[i].move();
+
+    outline.draw();
+    
+    for (var i = 0; i < circles.length; i++) {
+      circles[i] = circles[i].move();
+    }
+    
+    for (var i = 0; i < gBars.length; i++) {
+      gBars[i] = gBars[i].move();
     }
   }, 16);
 
