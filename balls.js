@@ -1,8 +1,9 @@
 var BAR_WIDTH = 2;
 var BAR_GROWTH_SPEED = 6;
+var BALL_RADIUS = 10;
 var MAX_X = 600;
 var MAX_Y = 300;
-var NUM_CIRCLES = 4;
+var NUM_BALLS = 4;
 var gBars = [];
 var gSpaces = [];
 var gCanvasElement;
@@ -25,7 +26,8 @@ function randomColor() {
 }
 
 function randomPoint() {
-  return point(randInt(MAX_X), randInt(MAX_Y));
+  return point(randInt(MAX_X - BALL_RADIUS*2) + BALL_RADIUS,
+               randInt(MAX_Y - BALL_RADIUS*2) + BALL_RADIUS);
 }
 
 function boundryFor(x, y) {
@@ -70,7 +72,7 @@ function space(lowX, lowY, maxX, maxY) {
 function circle(context) {
   var that = {};
   var center = randomPoint();
-  var radius =  10;
+  var radius =  BALL_RADIUS;
   var color = randomColor();
   var dx = 5;
   var dy = 5;
@@ -236,7 +238,7 @@ function initGame() {
   var outline = border(context);
 
   var circles = []
-  for (var i = 0; i < NUM_CIRCLES; i++) {
+  for (var i = 0; i < NUM_BALLS; i++) {
     circles.push(circle(context));
   }
 
