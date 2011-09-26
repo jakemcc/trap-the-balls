@@ -50,17 +50,16 @@ function space(lowX, lowY, maxX, maxY) {
     return containsX(x) && containsY(y);
   }
 
-  that.split = function(x, y) {
-    if (containsX(x)) {
+  that.split = function(x, y, verticalSplit) {
+    if (verticalSplit) {
       return [space(lowX, lowY, x, maxY), space(x, lowY, maxX, maxY)];
-    } else if (containsY(y)) {
+    } else {
       return [space(lowX, lowY, maxX, y), space(lowX, y, maxX, maxY)];
     }
-    throw "Tried to split with points not in space!!";
   }
 
   that.bisectedBy = function(x, y) {
-    return containsX(x) || containsY(y);
+    return containsX(x) && containsY(y);
   }
 
   return that;
@@ -111,25 +110,28 @@ function circle(context) {
   return that;
 }
 
-function completeBar(upperX, upperY, width, height, context) {
+function completeBar(upperPoint, origPoint, width, height, isVertical, context) {
   function splitSpaces() {
     var nextSpaces = [];
     for (var i = 0; i < gSpaces.length; i++) {
       var space = gSpaces[i];
-      if (space.bisectedBy(upperX, upperY)) {
-        nextSpaces = nextSpaces.concat(space.split(upperX, upperY));
+      if (space.bisectedBy(origPoint.x, origPoint.y)) {
+        nextSpaces = nextSpaces.concat(space.split(origPoint.x,
+                                                   origPoint.y,
+                                                   isVertical));
       } else {
         nextSpaces.push(space);
       }
     }
     gSpaces = nextSpaces;
   }
+
   splitSpaces();
 
   var that = {};
   that.move = function() {
     context.save();
-    context.fillRect(upperX, upperY, width, height);
+    context.fillRect(upperPoint.x, upperPoint.y, width, height);
     context.stroke();
     context.restore();
     return that;
@@ -148,7 +150,7 @@ function bar(x, y, isVertical, context) {
   function isComplete() {
     // doing boundry check in here supports multiple bars ending so
     // space is dynamic ove life, could not do this and just
-    // figure out space once    
+    // figure out space once
     var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
       return upperY <= space.lowY && height + upperY >= space.maxY;
@@ -176,7 +178,9 @@ function bar(x, y, isVertical, context) {
 
   function next() {
     if (isComplete()) {
-      return completeBar(upperX, upperY, width, height, context);
+      return completeBar(point(upperX, upperY),
+                         clickPoint, width, height,
+                         isVertical, context);
     }
     return that;
   }
