@@ -1,3 +1,5 @@
+var BAR_WIDTH = 1;
+var BAR_GROWTH_SPEED = 4;
 var MAX_X = 600;
 var MAX_Y = 300;
 var NUM_CIRCLES = 4;
@@ -67,11 +69,11 @@ function space(lowX, lowY, maxX, maxY) {
 
 function circle(context) {
   var that = {};
-  var center = point(MAX_X / 2, MAX_Y / 2);
+  var center = randomPoint();
   var radius =  10;
   var color = randomColor();
-  var dx = randInt(10) + 1;
-  var dy = randInt(10) + 1;
+  var dx = 5;
+  var dy = 5;
 
   function draw() {
     context.save();
@@ -110,7 +112,7 @@ function circle(context) {
   return that;
 }
 
-function completeBar(upperPoint, origPoint, width, height, isVertical, context) {
+function completeBar(p1, p2, origPoint, isVertical, context) {
   function splitSpaces() {
     var nextSpaces = [];
     for (var i = 0; i < gSpaces.length; i++) {
@@ -131,7 +133,7 @@ function completeBar(upperPoint, origPoint, width, height, isVertical, context) 
   var that = {};
   that.move = function() {
     context.save();
-    context.fillRect(upperPoint.x, upperPoint.y, width, height);
+    context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
     context.stroke();
     context.restore();
     return that;
@@ -140,12 +142,17 @@ function completeBar(upperPoint, origPoint, width, height, isVertical, context) 
 }
 
 function bar(x, y, isVertical, context) {
+
   var clickPoint = point(x, y);
+  var p1 = point(x, y);
+  var p2 = point(x, y);
+  if (isVertical) {
+    p2.x += BAR_WIDTH;
+  } else {
+    p2.y += BAR_WIDTH;
+  }
+
   var that = {};
-  var upperX = x;
-  var upperY = y;
-  var width = 1;
-  var height = 1;
 
   function isComplete() {
     // doing boundry check in here supports multiple bars ending so
@@ -153,33 +160,33 @@ function bar(x, y, isVertical, context) {
     // figure out space once
     var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
-      return upperY <= space.lowY && height + upperY >= space.maxY;
+      return p1.y <= space.lowY && p2.y >= space.maxY;
     } else {
-      return upperX <= space.lowX && width + upperX >= space.maxX;
+      return p1.x <= space.lowX && p2.x >= space.maxX;
     }
   }
 
   function grow() {
+    var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
-      height += 4;
-      upperY -= 2;
+      p1.y = Math.max(space.lowY, p1.y - BAR_GROWTH_SPEED);
+      p2.y = Math.min(space.maxY, p2.y + BAR_GROWTH_SPEED);
     } else {
-      upperX -= 2;
-      width += 4;
+      p1.x = Math.max(space.lowX, p1.x - BAR_GROWTH_SPEED);
+      p2.x = Math.min(space.maxX, p2.x + BAR_GROWTH_SPEED);
     }
   }
 
   function draw() {
     context.save();
-    context.fillRect(upperX, upperY, width, height);
+    context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
     context.stroke();
     context.restore();
   }
 
   function next() {
     if (isComplete()) {
-      return completeBar(point(upperX, upperY),
-                         clickPoint, width, height,
+      return completeBar(p1, p2, clickPoint,
                          isVertical, context);
     }
     return that;
