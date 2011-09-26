@@ -1,5 +1,5 @@
-var BAR_WIDTH = 1;
-var BAR_GROWTH_SPEED = 4;
+var BAR_WIDTH = 2;
+var BAR_GROWTH_SPEED = 6;
 var MAX_X = 600;
 var MAX_Y = 300;
 var NUM_CIRCLES = 4;
@@ -155,9 +155,6 @@ function bar(x, y, isVertical, context) {
   var that = {};
 
   function isComplete() {
-    // doing boundry check in here supports multiple bars ending so
-    // space is dynamic ove life, could not do this and just
-    // figure out space once
     var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
       return p1.y <= space.lowY && p2.y >= space.maxY;
@@ -201,6 +198,18 @@ function bar(x, y, isVertical, context) {
   return that;
 }
 
+function border(context) {
+  var that = {};
+  that.move = function() {
+    context.save();
+    context.strokeStyle = "gray";
+    context.strokeRect(0, 0, MAX_X, MAX_Y);
+    context.restore();
+    return that;
+  }
+  return that;
+}
+
 function onClick(e) {
   var x = e.pageX;
   var y = e.pageY;
@@ -224,7 +233,8 @@ function initGame() {
   var context = canvasElement.getContext("2d");
   gContext = context;
 
-
+  elements.push(border(context));
+  
   for (var i = 0; i < NUM_CIRCLES; i++) {
     elements.push(circle(context));
   }
