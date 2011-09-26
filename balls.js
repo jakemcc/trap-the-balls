@@ -26,7 +26,7 @@ function randomPoint() {
 function circle(context) {
   var that = {};
   var center = point(max_x / 2, max_y / 2);
-  var radius =  randInt(50) + 10;
+  var radius =  10;
   var color = randomColor();
   var dx = randInt(10) + 1;
   var dy = randInt(10) + 1;
@@ -54,6 +54,7 @@ function circle(context) {
     center.x += dx;
     center.y += dy;
     that.draw();
+    return that;
   };
 
   return that;
@@ -72,13 +73,34 @@ function onClick(e) {
 
 var gCanvasElement;
 
+function completeBar(upperX, upperY, width, height, context) {
+  var that = {};
+  that.move = function() {
+    context.save();
+    context.fillRect(upperX, upperY, width, height);
+    context.stroke();
+    context.restore();
+    return that;
+  }
+  return that;
+}
+
 function bar(x, y, isVertical, context) {
   var that = {};
   var upperX = x;
   var upperY = y;
   var width = 4;
   var height = 4;
-  that.move = function() {
+
+  function isComplete() {
+    if (isVertical) {
+      return upperY <= 0 && height + upperY >= max_y;
+    } else {
+      return upperX <= 0 && width + upperX >= max_x;
+    }
+  }
+
+  function grow() {
     if (isVertical) {
       height += 4;
       upperY -= 2;
@@ -86,12 +108,28 @@ function bar(x, y, isVertical, context) {
       upperX -= 2;
       width += 4;
     }
+  }
+
+  function draw() {
     context.save();
     context.fillRect(upperX, upperY, width, height);
-    //    context.strokeStyle = "black";
     context.stroke();
     context.restore();
   }
+
+  function next() {
+    if (isComplete()) {
+      return completeBar(upperX, upperY, width, height, context);
+    }
+    return that;
+  }
+
+  that.move = function() {
+    grow();
+    draw();
+    return next();
+  }
+  
   return that;
 }
 
@@ -113,7 +151,7 @@ function initGame() {
   setInterval(function() {
     context.clearRect(0, 0, max_x, max_y);
     for (var i = 0; i < elements.length; i++) {
-      elements[i].move();
+      elements[i] = elements[i].move();
     }
   }, 16);
 
