@@ -1,6 +1,9 @@
-var max_x = 1000;
-var max_y = 300;
+var MAX_X = 600;
+var MAX_Y = 300;
+var NUM_CIRCLES = 4;
 var elements = [];
+var gSpaces = [];
+var gCanvasElement;
 
 function point(x, y) {
   p = {};
@@ -20,12 +23,52 @@ function randomColor() {
 }
 
 function randomPoint() {
-  return point(randInt(max_x), randInt(max_y));
+  return point(randInt(MAX_X), randInt(MAX_Y));
+}
+
+function boundryFor(x, y) {
+  for (var i = 0; i < gSpaces.length; i++) {
+    var space = gSpaces[i];
+    if (space.contains(x, y)) {
+      return space;
+    }
+  }
+  throw "Could not find space for point [" + x + "," + y + "]";
+}
+
+function space(lowX, lowY, maxX, maxY) {
+  var that = {};
+  that.lowX = lowX;
+  that.lowY = lowY;
+  that.maxX = maxX;
+  that.maxY = maxY;
+
+  function containsX(x) { return x > lowX && x < maxX; }
+  function containsY(y) { return y > lowY && y < maxY; }
+
+  that.contains = function(x, y) {
+    return containsX(x) && containsY(y);
+  }
+
+  that.split = function(x, y) {
+    if (containsX(x)) {
+      return [space(lowX, lowY, x, maxY), space(x, lowY, maxX, maxY)];
+    } else if (containsY(y)) {
+      return [space(lowX, lowY, maxX, y), space(lowX, y, maxX, maxY)];
+    }
+    throw "Tried to split with points not in space!!";
+  }
+
+  that.bisectedBy = function(x, y) {
+    return containsX(x) || containsY(y);
+  }
+
+  return that;
 }
 
 function circle(context) {
   var that = {};
-  var center = point(max_x / 2, max_y / 2);
+  var center = point(MAX_X / 2, MAX_Y / 2);
   var radius =  10;
   var color = randomColor();
   var dx = randInt(10) + 1;
@@ -41,21 +84,24 @@ function circle(context) {
     context.fillStyle = color;
     context.stroke();
     context.fill();
-    
+
     context.restore();
   };
 
+  // I think this can still let balls go past edges. I think
+  // conditionals need to have take into account motion
   function adjust() {
-    if (center.x >= max_x - radius || center.x < 0 + radius) {
+    var corners = boundryFor(center.x, center.y);
+    if (center.x >= corners.maxX - radius || center.x <= corners.lowX + radius) {
       dx = -dx;
     }
-    if (center.y >= max_y - radius || center.y < 0 + radius) {
+    if (center.y >= corners.maxY - radius || center.y <= corners.lowY + radius) {
       dy = -dy;
     }
     center.x += dx;
     center.y += dy;
   }
-  
+
   that.move = function() {
     adjust();
     draw();
@@ -65,20 +111,21 @@ function circle(context) {
   return that;
 }
 
-function onClick(e) {
-  var x = e.pageX;
-  var y = e.pageY;
-
-  x -= gCanvasElement.offsetLeft;
-  y -= gCanvasElement.offsetTop;
-
-  var b = bar(x, y, e.shiftKey, gCanvasElement.getContext("2d"));
-  elements.push(b);
-}
-
-var gCanvasElement;
-
 function completeBar(upperX, upperY, width, height, context) {
+  function splitSpaces() {
+    var nextSpaces = [];
+    for (var i = 0; i < gSpaces.length; i++) {
+      var space = gSpaces[i];
+      if (space.bisectedBy(upperX, upperY)) {
+        nextSpaces = nextSpaces.concat(space.split(upperX, upperY));
+      } else {
+        nextSpaces.push(space);
+      }
+    }
+    gSpaces = nextSpaces;
+  }
+  splitSpaces();
+
   var that = {};
   that.move = function() {
     context.save();
@@ -91,17 +138,22 @@ function completeBar(upperX, upperY, width, height, context) {
 }
 
 function bar(x, y, isVertical, context) {
+  var clickPoint = point(x, y);
   var that = {};
   var upperX = x;
   var upperY = y;
-  var width = 4;
-  var height = 4;
+  var width = 1;
+  var height = 1;
 
   function isComplete() {
+    // doing boundry check in here supports multiple bars ending so
+    // space is dynamic ove life, could not do this and just
+    // figure out space once    
+    var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
-      return upperY <= 0 && height + upperY >= max_y;
+      return upperY <= space.lowY && height + upperY >= space.maxY;
     } else {
-      return upperX <= 0 && width + upperX >= max_x;
+      return upperX <= space.lowX && width + upperX >= space.maxX;
     }
   }
 
@@ -134,27 +186,40 @@ function bar(x, y, isVertical, context) {
     draw();
     return next();
   }
-  
+
   return that;
 }
 
+function onClick(e) {
+  var x = e.pageX;
+  var y = e.pageY;
 
+  x -= gCanvasElement.offsetLeft;
+  y -= gCanvasElement.offsetTop;
+
+  var b = bar(x, y, e.shiftKey, gCanvasElement.getContext("2d"));
+  elements.push(b);
+}
 
 function initGame() {
+  gSpaces.push(space(0, 0, MAX_X, MAX_Y));
+
   canvasElement = document.createElement("canvas");
   canvasElement.id = "a";
-  canvasElement.width = max_x;
-  canvasElement.height = max_y;
+  canvasElement.width = MAX_X;
+  canvasElement.height = MAX_Y;
   document.body.appendChild(canvasElement);
   gCanvasElement = canvasElement;
   var context = canvasElement.getContext("2d");
   gContext = context;
-  for (var i = 0; i < 4; i++) {
+
+
+  for (var i = 0; i < NUM_CIRCLES; i++) {
     elements.push(circle(context));
   }
 
   setInterval(function() {
-    context.clearRect(0, 0, max_x, max_y);
+    context.clearRect(0, 0, MAX_X, MAX_Y);
     for (var i = 0; i < elements.length; i++) {
       elements[i] = elements[i].move();
     }
@@ -162,3 +227,5 @@ function initGame() {
 
   canvasElement.addEventListener("click", onClick, false);
 }
+
+
