@@ -1,5 +1,6 @@
 var BAR_WIDTH = 2;
 var BAR_GROWTH_SPEED = 6;
+var BAR_DECAY_SPEED = 15;
 var BALL_RADIUS = 10;
 var MAX_X = 600;
 var MAX_Y = 300;
@@ -69,7 +70,27 @@ function space(lowX, lowY, maxX, maxY) {
   return that;
 }
 
-function circle(context) {
+function distanceBetween(p, q) {
+  return Math.sqrt(Math.pow(p.x - q.x, 2) + Math.pow(p.y - q.y, 2));
+}
+
+function collides(p, q, isVertical, center, radius) {
+  var pp, qq;
+  if (isVertical) {
+    pp = point(p.x - radius, p.y);
+    qq = point(q.x + radius, q.y);
+  } else {
+    pp = point(p.x, p.y - radius);
+    qq = point(q.x, q.y + radius);
+  }
+
+  return distanceBetween(p, center) <= radius ||
+    distanceBetween(q, center) <= radius ||
+    ((pp.x <= center.x && center.x <= qq.x) &&
+     (pp.y <= center.y && center.y <= qq.y))
+}
+
+function ball(context) {
   var that = {};
   var center = randomPoint();
   var radius =  BALL_RADIUS;
@@ -105,12 +126,52 @@ function circle(context) {
     center.y += dy;
   }
 
+  function checkCollision() {
+    for (var i = 0; i < gBars.length; i++) {
+      if (!gBars[i].isComplete && collides(gBars[i].p1,
+                                           gBars[i].p2,
+                                           gBars[i].isVertical,
+                                           center,
+                                           radius)) {
+        gBars[i].hasCollided = true;
+      }
+    }
+  }
+
   that.move = function() {
     adjust();
+    checkCollision();
     draw();
     return that;
   };
 
+  return that;
+}
+
+function noop() {
+  var that = {};
+  that.isComplete = true;
+  that.move = function() {
+    return that;
+  }
+  return that;
+}
+
+function deadBar(p1, p2, context, remainingFrames) {
+  var that = {};
+
+  that.isComplete = true;
+  that.move = function() {
+    if (remainingFrames === 0) {
+      return noop();
+    }
+    context.save();
+    context.fillStyle = "gray";
+    context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+//    context.stroke();
+    context.restore();
+    return deadBar(p1, p2, context, remainingFrames - 1);
+  }
   return that;
 }
 
@@ -133,6 +194,8 @@ function completeBar(p1, p2, origPoint, isVertical, context) {
   splitSpaces();
 
   var that = {};
+  that.p1 = p1;
+  that.p2 = p2;
   that.move = function() {
     context.save();
     context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
@@ -144,54 +207,58 @@ function completeBar(p1, p2, origPoint, isVertical, context) {
 }
 
 function bar(x, y, isVertical, context) {
-
   var clickPoint = point(x, y);
-  var p1 = point(x, y);
-  var p2 = point(x, y);
-  if (isVertical) {
-    p2.x += BAR_WIDTH;
-  } else {
-    p2.y += BAR_WIDTH;
-  }
 
   var that = {};
+  that.hasCollided = false;
+  that.p1 = point(x, y);
+  that.p2 = point(x, y);
+  that.isVertical = isVertical;
+  if (isVertical) {
+    that.p2.x += BAR_WIDTH;
+  } else {
+    that.p2.y += BAR_WIDTH;
+  }
 
   function isComplete() {
     var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
-      return p1.y <= space.lowY && p2.y >= space.maxY;
+      return that.p1.y <= space.lowY && that.p2.y >= space.maxY;
     } else {
-      return p1.x <= space.lowX && p2.x >= space.maxX;
+      return that.p1.x <= space.lowX && that.p2.x >= space.maxX;
     }
   }
 
   function grow() {
     var space = boundryFor(clickPoint.x, clickPoint.y);
     if (isVertical) {
-      p1.y = Math.max(space.lowY, p1.y - BAR_GROWTH_SPEED);
-      p2.y = Math.min(space.maxY, p2.y + BAR_GROWTH_SPEED);
+      that.p1.y = Math.max(space.lowY, that.p1.y - BAR_GROWTH_SPEED);
+      that.p2.y = Math.min(space.maxY, that.p2.y + BAR_GROWTH_SPEED);
     } else {
-      p1.x = Math.max(space.lowX, p1.x - BAR_GROWTH_SPEED);
-      p2.x = Math.min(space.maxX, p2.x + BAR_GROWTH_SPEED);
+      that.p1.x = Math.max(space.lowX, that.p1.x - BAR_GROWTH_SPEED);
+      that.p2.x = Math.min(space.maxX, that.p2.x + BAR_GROWTH_SPEED);
     }
   }
 
   function draw() {
     context.save();
-    context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+    context.fillRect(that.p1.x, that.p1.y, that.p2.x - that.p1.x, that.p2.y - that.p1.y);
     context.stroke();
     context.restore();
   }
 
   function next() {
     if (isComplete()) {
-      return completeBar(p1, p2, clickPoint,
+      return completeBar(that.p1, that.p2, clickPoint,
                          isVertical, context);
     }
     return that;
   }
 
   that.move = function() {
+    if (that.hasCollided) {
+      return deadBar(this.p1, this.p2, context, BAR_DECAY_SPEED);
+    }
     grow();
     draw();
     return next();
@@ -237,20 +304,20 @@ function initGame() {
 
   var outline = border(context);
 
-  var circles = []
+  var balls = []
   for (var i = 0; i < NUM_BALLS; i++) {
-    circles.push(circle(context));
+    balls.push(ball(context));
   }
 
   setInterval(function() {
     context.clearRect(0, 0, MAX_X, MAX_Y);
 
     outline.draw();
-    
-    for (var i = 0; i < circles.length; i++) {
-      circles[i] = circles[i].move();
+
+    for (var i = 0; i < balls.length; i++) {
+      balls[i] = balls[i].move();
     }
-    
+
     for (var i = 0; i < gBars.length; i++) {
       gBars[i] = gBars[i].move();
     }
