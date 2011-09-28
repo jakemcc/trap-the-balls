@@ -4,8 +4,9 @@ var BAR_DECAY_SPEED = 15;
 var BALL_RADIUS = 10;
 var MAX_X = 600;
 var MAX_Y = 300;
-var NUM_BALLS = 4;
+var NUM_BALLS = 5;
 var gBars = [];
+var gBalls = []
 var gSpaces = [];
 var gCanvasElement;
 
@@ -90,9 +91,9 @@ function collides(p, q, isVertical, center, radius) {
      (pp.y <= center.y && center.y <= qq.y))
 }
 
-function ball(context) {
-  var that = {};
-  var center = randomPoint();
+function Ball(context) {
+  var that = this;
+  that.center = randomPoint();
   var radius =  BALL_RADIUS;
   var color = randomColor();
   var dx = 5;
@@ -104,7 +105,7 @@ function ball(context) {
     context.beginPath();
     context.strokeStyle = color;
     context.fillStyle = color;
-    context.arc(center.x, center.y, radius, 0, Math.PI*2, false);
+    context.arc(that.center.x, that.center.y, radius, 0, Math.PI*2, false);
     context.closePath();
     context.stroke();
     context.fill();
@@ -115,23 +116,27 @@ function ball(context) {
   // I think this can still let balls go past edges. I think
   // conditionals need to have take into account motion
   function adjust() {
-    var corners = boundryFor(center.x, center.y);
-    if (center.x >= corners.maxX - radius || center.x <= corners.lowX + radius) {
+    var corners = boundryFor(that.center.x, that.center.y);
+    if (that.center.x >= corners.maxX - radius ||
+        that.center.x <= corners.lowX + radius) {
       dx = -dx;
     }
-    if (center.y >= corners.maxY - radius || center.y <= corners.lowY + radius) {
+    if (that.center.y >= corners.maxY - radius ||
+        that.center.y <= corners.lowY + radius) {
       dy = -dy;
     }
-    center.x += dx;
-    center.y += dy;
+
+
+    that.center.x += dx;
+    that.center.y += dy;
   }
 
-  function checkCollision() {
+  function collideWithWalls() {
     for (var i = 0; i < gBars.length; i++) {
       if (!gBars[i].isComplete && collides(gBars[i].p1,
                                            gBars[i].p2,
                                            gBars[i].isVertical,
-                                           center,
+                                           that.center,
                                            radius)) {
         gBars[i].hasCollided = true;
       }
@@ -140,12 +145,10 @@ function ball(context) {
 
   that.move = function() {
     adjust();
-    checkCollision();
+    collideWithWalls();
     draw();
     return that;
   };
-
-  return that;
 }
 
 function noop() {
@@ -288,40 +291,49 @@ function onClick(e) {
   gBars.push(b);
 }
 
+function makeCanvas(id) {
+  canvasElement = document.createElement("canvas");
+  canvasElement.id = id;
+  canvasElement.width = MAX_X;
+  canvasElement.height = MAX_Y;
+  return canvasElement
+}
 function initGame() {
   gSpaces.push(space(0, 0, MAX_X, MAX_Y));
 
-  canvasElement = document.createElement("canvas");
-  canvasElement.id = "a";
-  canvasElement.width = MAX_X;
-  canvasElement.height = MAX_Y;
-  document.body.appendChild(canvasElement);
-  gCanvasElement = canvasElement;
-  var context = canvasElement.getContext("2d");
-  gContext = context;
+  gCanvasElement = makeCanvas("game");
+  document.body.appendChild(gCanvasElement);
+  var context = gCanvasElement.getContext("2d");
+  gVisibleContext = context;
 
-  var outline = border(context);
+  var invisibleCanvasElement = makeCanvas("offscreen");
+  var invisibleContext = invisibleCanvasElement.getContext("2d");
 
-  var balls = []
+  var outline = border(invisibleContext);
+
+
   for (var i = 0; i < NUM_BALLS; i++) {
-    balls.push(ball(context));
+    gBalls.push(new Ball(invisibleContext));
   }
 
   setInterval(function() {
-    context.clearRect(0, 0, MAX_X, MAX_Y);
+    gVisibleContext.clearRect(0, 0, MAX_X, MAX_Y);
+    invisibleContext.clearRect(0, 0, MAX_X, MAX_Y);
 
     outline.draw();
 
-    for (var i = 0; i < balls.length; i++) {
-      balls[i] = balls[i].move();
+    for (var i = 0; i < gBalls.length; i++) {
+      gBalls[i] = gBalls[i].move();
     }
 
     for (var i = 0; i < gBars.length; i++) {
       gBars[i] = gBars[i].move();
     }
+
+    gVisibleContext.drawImage(invisibleCanvasElement, 0, 0);
   }, 16);
 
-  canvasElement.addEventListener("click", onClick, false);
+  gCanvasElement.addEventListener("click", onClick, false);
 }
 
 
