@@ -147,7 +147,6 @@ function Ball(context) {
     adjust();
     collideWithWalls();
     draw();
-    return that;
   };
 }
 
@@ -286,6 +285,7 @@ function makeCanvas(id) {
   canvasElement.height = MAX_Y;
   return canvasElement
 }
+
 function initGame() {
   gSpaces.push(space(0, 0, MAX_X, MAX_Y));
 
@@ -312,7 +312,7 @@ function initGame() {
 
 
     for (var i = 0; i < gBalls.length; i++) {
-      gBalls[i] = gBalls[i].move();
+      gBalls[i].move();
     }
 
     for (var i = 0; i < gBars.length; i++) {
