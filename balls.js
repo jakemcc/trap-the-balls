@@ -42,33 +42,31 @@ function boundryFor(x, y) {
   throw "Could not find space for point [" + x + "," + y + "]";
 }
 
-function space(lowX, lowY, maxX, maxY) {
-  var that = {};
-  that.lowX = lowX;
-  that.lowY = lowY;
-  that.maxX = maxX;
-  that.maxY = maxY;
+function Space(lowX, lowY, maxX, maxY) {
+  var that = this;
+  this.lowX = lowX;
+  this.lowY = lowY;
+  this.maxX = maxX;
+  this.maxY = maxY;
 
   function containsX(x) { return x > lowX && x < maxX; }
   function containsY(y) { return y > lowY && y < maxY; }
 
-  that.contains = function(x, y) {
+  this.contains = function(x, y) {
     return containsX(x) && containsY(y);
   }
 
-  that.split = function(x, y, verticalSplit) {
+  this.split = function(x, y, verticalSplit) {
     if (verticalSplit) {
-      return [space(lowX, lowY, x, maxY), space(x, lowY, maxX, maxY)];
+      return [new Space(lowX, lowY, x, maxY), new Space(x, lowY, maxX, maxY)];
     } else {
-      return [space(lowX, lowY, maxX, y), space(lowX, y, maxX, maxY)];
+      return [new Space(lowX, lowY, maxX, y), new Space(lowX, y, maxX, maxY)];
     }
   }
 
-  that.bisectedBy = function(x, y) {
+  this.bisectedBy = function(x, y) {
     return containsX(x) && containsY(y);
   }
-
-  return that;
 }
 
 function distanceBetween(p, q) {
@@ -287,7 +285,7 @@ function makeCanvas(id) {
 }
 
 function initGame() {
-  gSpaces.push(space(0, 0, MAX_X, MAX_Y));
+  gSpaces.push(new Space(0, 0, MAX_X, MAX_Y));
 
   gCanvasElement = makeCanvas("game");
 
