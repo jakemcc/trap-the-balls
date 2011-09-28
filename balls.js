@@ -157,11 +157,10 @@ function noop() {
   return that;
 }
 
-function deadBar(p1, p2, context, remainingFrames) {
-  var that = {};
-
-  that.isComplete = true;
-  that.move = function() {
+function DeadBar(p1, p2, context, remainingFrames) {
+  var that = this;
+  this.isComplete = true;
+  this.move = function() {
     if (remainingFrames === 0) {
       return noop();
     }
@@ -169,9 +168,8 @@ function deadBar(p1, p2, context, remainingFrames) {
     context.fillStyle = "gray";
     context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
     context.restore();
-    return deadBar(p1, p2, context, remainingFrames - 1);
+    return new DeadBar(p1, p2, context, remainingFrames - 1);
   }
-  return that;
 }
 
 function completeBar(p1, p2, origPoint, isVertical, context) {
@@ -255,7 +253,7 @@ function bar(x, y, isVertical, context) {
 
   that.move = function() {
     if (that.hasCollided) {
-      return deadBar(this.p1, this.p2, context, BAR_DECAY_SPEED);
+      return new DeadBar(this.p1, this.p2, context, BAR_DECAY_SPEED);
     }
     grow();
     draw();
