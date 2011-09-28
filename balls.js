@@ -172,7 +172,7 @@ function DeadBar(p1, p2, context, remainingFrames) {
   }
 }
 
-function completeBar(p1, p2, origPoint, isVertical, context) {
+function CompleteBar(p1, p2, origPoint, isVertical, context) {
   function splitSpaces() {
     var nextSpaces = [];
     for (var i = 0; i < gSpaces.length; i++) {
@@ -190,17 +190,17 @@ function completeBar(p1, p2, origPoint, isVertical, context) {
 
   splitSpaces();
 
-  var that = {};
-  that.p1 = p1;
-  that.p2 = p2;
-  that.move = function() {
+  var that = this;
+  this.p1 = p1;
+  this.p2 = p2;
+  this.move = function() {
     context.save();
     context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
     context.stroke();
     context.restore();
-    return that;
+    return this;
   }
-  return that;
+
 }
 
 function bar(x, y, isVertical, context) {
@@ -245,8 +245,8 @@ function bar(x, y, isVertical, context) {
 
   function next() {
     if (isComplete()) {
-      return completeBar(that.p1, that.p2, clickPoint,
-                         isVertical, context);
+      return new CompleteBar(that.p1, that.p2, clickPoint,
+                             isVertical, context);
     }
     return that;
   }
