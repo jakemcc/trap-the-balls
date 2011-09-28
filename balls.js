@@ -141,7 +141,7 @@ function Ball(context) {
     }
   }
 
-  that.move = function() {
+  this.move = function() {
     adjust();
     collideWithWalls();
     draw();
