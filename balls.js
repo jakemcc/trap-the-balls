@@ -198,19 +198,19 @@ function CompleteBar(p1, p2, origPoint, isVertical, context) {
     context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
     context.stroke();
     context.restore();
-    return this;
+    return that;
   }
 
 }
 
-function bar(x, y, isVertical, context) {
+function Bar(x, y, isVertical, context) {
   var clickPoint = point(x, y);
 
-  var that = {};
-  that.hasCollided = false;
-  that.p1 = point(x, y);
-  that.p2 = point(x, y);
-  that.isVertical = isVertical;
+  var that = this;
+  this.hasCollided = false;
+  this.p1 = point(x, y);
+  this.p2 = point(x, y);
+  this.isVertical = isVertical;
   if (isVertical) {
     that.p2.x += BAR_WIDTH;
   } else {
@@ -253,14 +253,12 @@ function bar(x, y, isVertical, context) {
 
   that.move = function() {
     if (that.hasCollided) {
-      return new DeadBar(this.p1, this.p2, context, BAR_DECAY_SPEED);
+      return new DeadBar(that.p1, that.p2, context, BAR_DECAY_SPEED);
     }
     grow();
     draw();
     return next();
   }
-
-  return that;
 }
 
 function onClick(e) {
@@ -270,7 +268,7 @@ function onClick(e) {
   x -= gCanvasElement.offsetLeft;
   y -= gCanvasElement.offsetTop;
 
-  var b = bar(x, y, e.shiftKey, gCanvasElement.getContext("2d"));
+  var b = new Bar(x, y, e.shiftKey, gCanvasElement.getContext("2d"));
   gBars.push(b);
 }
 
