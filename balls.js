@@ -102,10 +102,10 @@ function ball(context) {
     context.save();
 
     context.beginPath();
-    context.arc(center.x, center.y, radius, 0, Math.PI*2, false);
-    context.closePath();
     context.strokeStyle = color;
     context.fillStyle = color;
+    context.arc(center.x, center.y, radius, 0, Math.PI*2, false);
+    context.closePath();
     context.stroke();
     context.fill();
 
@@ -168,7 +168,6 @@ function deadBar(p1, p2, context, remainingFrames) {
     context.save();
     context.fillStyle = "gray";
     context.fillRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-//    context.stroke();
     context.restore();
     return deadBar(p1, p2, context, remainingFrames - 1);
   }
@@ -243,7 +242,6 @@ function bar(x, y, isVertical, context) {
   function draw() {
     context.save();
     context.fillRect(that.p1.x, that.p1.y, that.p2.x - that.p1.x, that.p2.y - that.p1.y);
-    context.stroke();
     context.restore();
   }
 
