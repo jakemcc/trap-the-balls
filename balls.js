@@ -268,18 +268,6 @@ function bar(x, y, isVertical, context) {
   return that;
 }
 
-function border(context) {
-  var that = {};
-  that.draw = function() {
-    context.save();
-    context.strokeStyle = "gray";
-    context.strokeRect(0, 0, MAX_X, MAX_Y);
-    context.restore();
-    return that;
-  }
-  return that;
-}
-
 function onClick(e) {
   var x = e.pageX;
   var y = e.pageY;
@@ -302,6 +290,9 @@ function initGame() {
   gSpaces.push(space(0, 0, MAX_X, MAX_Y));
 
   gCanvasElement = makeCanvas("game");
+
+  gCanvasElement.setAttribute('style',"border:1px solid #000");
+
   document.body.appendChild(gCanvasElement);
   var context = gCanvasElement.getContext("2d");
   gVisibleContext = context;
@@ -309,7 +300,6 @@ function initGame() {
   var invisibleCanvasElement = makeCanvas("offscreen");
   var invisibleContext = invisibleCanvasElement.getContext("2d");
 
-  var outline = border(invisibleContext);
 
 
   for (var i = 0; i < NUM_BALLS; i++) {
@@ -320,7 +310,6 @@ function initGame() {
     gVisibleContext.clearRect(0, 0, MAX_X, MAX_Y);
     invisibleContext.clearRect(0, 0, MAX_X, MAX_Y);
 
-    outline.draw();
 
     for (var i = 0; i < gBalls.length; i++) {
       gBalls[i] = gBalls[i].move();
