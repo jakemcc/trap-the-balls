@@ -1,25 +1,10 @@
 (ns trapballs.main
   (:require [goog.dom :as dom]
             [trapballs.crossover.ball :as b]
-            [trapballs.crossover.drawable :as d]
             [trapballs.canvas :as canvas]))
 
 (defn body []
   (.-body js/document))
-
-(extend-protocol d/Drawable
-  trapballs.crossover.ball.Ball
-  (draw [ball context]
-    (.save context)
-    (.beginPath context)
-    (set! (.-strokeStyle context) (get ball :color "blue"))
-    (set! (.-fillStyle context) (get ball :color "blue"))
-    (.arc context (:x ball) (:y ball) 10, 0, (* 2 Math/PI), false)
-    (.closePath context)
-    (.stroke context)
-    (.fill context)
-    (.restore context)
-    ball))
 
 (defn log [& msg]
                                         ;  (.log js/console (str msg))
@@ -27,7 +12,6 @@
 
 (defn current-time []
   (.getTime (js/Date.)))
-
 
 (defn move-balls [elapsed-time balls]
   (mapv (fn [ball] (b/move ball elapsed-time))

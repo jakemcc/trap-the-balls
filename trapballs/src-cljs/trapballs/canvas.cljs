@@ -1,5 +1,20 @@
 (ns trapballs.canvas
-  (:require [trapballs.crossover.drawable :as d]))
+  (:require [trapballs.crossover.drawable :as d]
+            trapballs.crossover.ball))
+
+(extend-protocol d/Drawable
+  trapballs.crossover.ball.Ball
+  (draw [ball context]
+    (.save context)
+    (.beginPath context)
+    (set! (.-strokeStyle context) (get ball :color "blue"))
+    (set! (.-fillStyle context) (get ball :color "blue"))
+    (.arc context (:x ball) (:y ball) 10 0 (* 2 Math/PI) false)
+    (.closePath context)
+    (.stroke context)
+    (.fill context)
+    (.restore context)
+    ball))
 
 (defn make-canvas
   [name width height]
