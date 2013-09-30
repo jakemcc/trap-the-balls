@@ -1,39 +1,13 @@
 (ns trapballs.main
   (:require [goog.dom :as dom]
-            [trapballs.crossover.ball :as b]))
-
-(defn make-canvas [id]
-  (let [canvas (.createElement js/document "canvas")]
-    (set! (. canvas -width) 600)
-    (set! (. canvas -height) 300)
-    (set! (. canvas -id) id)
-    [canvas
-     (.getContext canvas "2d")
-     (.-width canvas)
-     (.-height canvas)]))
-
-(defn surface [canvas]
-  (first canvas))
-
-(defn context [canvas] :^CanvasRenderingContext2D
-  (second canvas))
-
-(defn width [canvas]
-  (nth canvas 2))
-
-(defn height [canvas]
-  (nth canvas 3))
-
-(defn set-border [elem]
-  (.setAttribute elem "style" "border:1px solid #000"))
+            [trapballs.crossover.ball :as b]
+            [trapballs.crossover.drawable :as d]
+            [trapballs.canvas :as canvas]))
 
 (defn body []
   (.-body js/document))
 
-(defprotocol Drawable
-  (draw [this context]))
-
-(extend-protocol Drawable
+(extend-protocol d/Drawable
   trapballs.crossover.ball.Ball
   (draw [ball context]
     (.save context)
@@ -65,25 +39,17 @@
 (defn space [state]
   {:origin-x 0
    :origin-y 0
-   :max-x (width (:on-screen-canvas state))
-   :max-y (height (:on-screen-canvas state))})
+   :max-x (canvas/width (:canvas state))
+   :max-y (canvas/height (:canvas state))})
 
 (defn physics [elapsed-time state]
   (let [updated-balls (move-balls elapsed-time (:balls state))
-        updated-balls (collide-balls updated-balls (space state))
-        ]
+        updated-balls (collide-balls updated-balls (space state))]
     (merge state {:balls updated-balls})))
 
 (defn render [state]
-  (let [on-screen-canvas (:on-screen-canvas state)
-        on-screen-context (context on-screen-canvas)
-        off-screen (:off-screen-canvas state)
-        off-screen-context (context off-screen)]
-    (.clearRect on-screen-context 0 0 (width on-screen-canvas) (height on-screen-canvas))
-    (.clearRect off-screen-context 0 0 (width on-screen-canvas) (height on-screen-canvas))
-    (doseq [ball (:balls state)]
-      (draw ball off-screen-context))
-    (.drawImage on-screen-context (surface off-screen) 0 0)))
+  (canvas/render (:canvas state)
+                 (:balls state)))
 
 (defn step [elapsed-time state]
   (let [new-state (physics elapsed-time state)]
@@ -106,9 +72,8 @@
 (defn num-between [x y]
   (+ x (rand-int y)))
 
-(defn init-state [on-screen-canvas off-screen-canvas]
-  {:on-screen-canvas on-screen-canvas
-   :off-screen-canvas off-screen-canvas
+(defn init-state [canvas]
+  {:canvas canvas
    :balls (for [_ (range 100)]
             (assoc
                 (trapballs.crossover.ball/->Ball
@@ -119,11 +84,9 @@
               :color (rand-nth ["red" "green" "blue" "brown" "pink" "lightgreen" "goldenrod" "purple"])))})
 
 (defn ^:export main []
-  (let [on-screen-canvas (make-canvas "onscreen")
-        off-screen-canvas (make-canvas "offscreen")
-        state (init-state on-screen-canvas
-                          off-screen-canvas)]
-    (set-border (surface on-screen-canvas))
-    (dom/appendChild (body) (surface on-screen-canvas))
+  (let [canvas (canvas/make-canvas "balls" 600 300)
+        state (init-state canvas)]
+    (canvas/add-border canvas)
+    (dom/appendChild (body) (canvas/surface canvas))
     (.requestAnimationFrame js/window (start-stepping step
                                                       state))))
