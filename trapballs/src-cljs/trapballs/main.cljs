@@ -38,22 +38,25 @@
     (render new-state)
     new-state))
 
+(defn next-frame [fun]
+  (.requestAnimationFrame js/window fun))
+
 (defn stepper [prior-time step-fn current-state]
   "Supplies step-fn the elapsed time between calls
    and current state. step-fn must return updated state."
   (fn [curr-time]
     (let [ts (- curr-time prior-time)
           new-state (step-fn ts current-state)]
-      (.requestAnimationFrame js/window (stepper curr-time step-fn new-state)))))
+      (next-frame (stepper curr-time step-fn new-state)))))
 
 (defn start-stepping [step-fn state]
   "Used to delay calling step-fn by one request frame
    in order to have an initial timestamp that is in
    same scale as timestamps given by window.requestAnimationFrame"
   (fn [timestamp]
-    (.requestAnimationFrame js/window (stepper timestamp
-                                               step-fn
-                                               state))))
+    (next-frame (stepper timestamp
+                         step-fn
+                         state))))
 
 (defn num-between [x y]
   (+ x (rand-int y)))
@@ -74,5 +77,5 @@
         state (init-state canvas)]
     (canvas/add-border canvas)
     (dom/appendChild (body) (canvas/surface canvas))
-    (.requestAnimationFrame js/window (start-stepping step
-                                                      state))))
+    (next-frame (start-stepping step
+                                state))))
