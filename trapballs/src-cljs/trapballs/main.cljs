@@ -6,10 +6,6 @@
 (defn body []
   (.-body js/document))
 
-(defn log [& msg]
-                                        ;  (.log js/console (str msg))
-  )
-
 (defn current-time []
   (.getTime (js/Date.)))
 
@@ -36,18 +32,24 @@
                  (:balls state)))
 
 (defn step [elapsed-time state]
+  "Takes elapsed time and current state and returns
+   updated state."
   (let [new-state (physics elapsed-time state)]
     (render new-state)
     new-state))
 
-(defn stepper [prior-time step current-state]
+(defn stepper [prior-time step-fn current-state]
+  "Supplies step-fn the elapsed time between calls
+   and current state. step-fn must return updated state."
   (fn [curr-time]
     (let [ts (- curr-time prior-time)
-          _ (log ts)
-          new-state (step ts current-state)]
-      (.requestAnimationFrame js/window (stepper curr-time step new-state)))))
+          new-state (step-fn ts current-state)]
+      (.requestAnimationFrame js/window (stepper curr-time step-fn new-state)))))
 
 (defn start-stepping [step-fn state]
+  "Used to delay calling step-fn by one request frame
+   in order to have an initial timestamp that is in
+   same scale as timestamps given by window.requestAnimationFrame"
   (fn [timestamp]
     (.requestAnimationFrame js/window (stepper timestamp
                                                step-fn
